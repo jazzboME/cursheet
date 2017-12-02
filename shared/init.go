@@ -43,5 +43,4 @@ func init () {
 	} else {
 		fmt.Println("Database configuration read successfully.")
 	}
-
 }
