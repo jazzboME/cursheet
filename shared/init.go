@@ -1,20 +1,23 @@
 package cursheet
 
 import (
-	"os"
-	"fmt"
-	"github.com/spf13/viper"
 	"flag"
+	"fmt"
+	"os"
 	"os/user"
+	"github.com/spf13/viper"
 )
 
+// Database holds the configuration of the database connection
 var Database = viper.New()
+// DefFileName is the filename of the cursor to sheet mapping
 var DefFileName string
+// HomeDir holds the user's current home directory
 var HomeDir string
 
-func init () {
-	databaseCfgPtr		:= flag.String("database", "database", "Database configuration file")
-	deffileCfgPtr		:= flag.String("deffile", "", "Definition file with column to output mapping")
+func init() {
+	databaseCfgPtr := flag.String("database", "database", "Database configuration file")
+	deffileCfgPtr := flag.String("deffile", "", "Definition file with column to output mapping")
 	flag.Parse()
 
 	if *deffileCfgPtr == "" {
