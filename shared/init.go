@@ -14,10 +14,17 @@ var Database = viper.New()
 var DefFileName string
 // HomeDir holds the user's current home directory
 var HomeDir string
+// StoredProc holds the name of the stored procedure to call
+var StoredProc string
+// Schema holds the schema of the stored procedure
+var Schema string
 
 func init() {
 	databaseCfgPtr := flag.String("database", "database", "Database configuration file")
 	deffileCfgPtr := flag.String("deffile", "", "Definition file with column to output mapping")
+	defProcCfgPtr := flag.String("procname", "", "Stored Procedure to Call" )
+	defProcSchemaCfgPtr := flag.String("schema", "", "Schema of Stored Procedure")
+
 	flag.Parse()
 
 	if *deffileCfgPtr == "" {
@@ -27,6 +34,14 @@ func init() {
 		DefFileName = *deffileCfgPtr
 	}
 
+	if *defProcCfgPtr != "" {
+		StoredProc = *defProcCfgPtr
+	}
+
+	if *defProcSchemaCfgPtr != "" {
+		Schema = *defProcSchemaCfgPtr
+	}
+	
 	usr, err := user.Current()
 	if err != nil {
 		fmt.Printf("Not able to get user environment: %s\n", err)
