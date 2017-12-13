@@ -16,4 +16,6 @@
 # Temporary files, typically from vim
 *.*~
 *.swp
-cur2sheet/coltest.toml
+
+# Should exclude .toml files from final commits
+*.toml
