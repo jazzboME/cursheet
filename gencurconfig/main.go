@@ -1,23 +1,22 @@
 package main
 
 import (
-	//"github.com/spf13/viper"
-	"bytes"
 	"bufio"
-	"os"
-    "gopkg.in/rana/ora.v4"
-    "fmt"
-	"github.com/BurntSushi/toml"
+	"bytes"
 	"cursheet/shared"
-//	"github.com/spf13/viper"
+	"fmt"
+	"github.com/BurntSushi/toml"
+	"gopkg.in/rana/ora.v4"
+	"io/ioutil"
+	"os"
 	"runtime"
 )
 
 type inParam struct {
-	name		string
-	position 	float64
-	dataType	string
-	value		string
+	name     string
+	position float64
+	dataType string
+	value    string
 }
 
 var queryProc = `
@@ -33,8 +32,8 @@ var resultSet = &ora.Rset{}
 func main() {
 
 	defer os.Exit(0)
-	var newConfig	cursheet.Config
-	var newCol		cursheet.Column
+	var newConfig cursheet.Config
+	var newCol cursheet.Column
 
 	var inputParams []inParam
 	var curParam inParam
@@ -50,8 +49,8 @@ func main() {
 		runtime.Goexit()
 	}
 	oraconn := cursheet.Database.GetString("credentials.user") + "/" +
-	cursheet.Database.GetString("credentials.password") + "@" +
-	cursheet.Database.GetString("database.tns")
+		cursheet.Database.GetString("credentials.password") + "@" +
+		cursheet.Database.GetString("database.tns")
 
 	env, srv, ses, err := ora.NewEnvSrvSes(oraconn)
 	if err != nil {
@@ -98,7 +97,7 @@ func main() {
 		} else {
 			numRows = rset.Len()
 		}
-		
+
 	}
 
 	fmt.Println("Using", len(inputParams), "input parameter(s).")
@@ -111,9 +110,9 @@ func main() {
 	for i := 1; i <= numRows; i++ {
 		callStmt += ":" + fmt.Sprintf("%d", i) + ", "
 	}
-	
-	callStmt = callStmt[0:len(callStmt) - 2] + ")"
-	
+
+	callStmt = callStmt[0:len(callStmt)-2] + ")"
+
 	stmtProcCall, err = ses.Prep(callStmt)
 	if err != nil {
 		fmt.Printf("Procedure call prep failed: %s", err)
@@ -121,7 +120,7 @@ func main() {
 	defer stmtProcCall.Close()
 
 	s := make([]interface{}, len(inputParams)+1)
-	
+
 	for i := 0; i < len(inputParams); i++ {
 		s[i] = inputParams[i].value
 	}
@@ -151,11 +150,9 @@ func main() {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(newConfig); err != nil {
 		fmt.Printf("Could not generate config: %s", err)
-	} 
+	}
 
+	err = ioutil.WriteFile(cursheet.DefFileName+".toml", buf.Bytes(), 0644)
 	fmt.Println(buf)
 
 }
-
-
-
