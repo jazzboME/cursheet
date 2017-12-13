@@ -30,7 +30,6 @@ func main() {
 		log.Fatal(err)
 	} 
 
-
 	viper.SetConfigType("toml")
 	viper.ReadConfig(buf)
 
