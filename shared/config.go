@@ -10,6 +10,7 @@ type Column struct {
 // Config defines the mapping between the cursor and the output sheet
 type Config struct {
 	Title		string
+	Schema		string
 	Procedure	string 
 	Cols		[]Column
 }
