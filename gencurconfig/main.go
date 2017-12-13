@@ -1,11 +1,13 @@
 package main
 
 import (
+	//"github.com/spf13/viper"
+	"bytes"
 	"bufio"
 	"os"
     "gopkg.in/rana/ora.v4"
     "fmt"
-//	"github.com/BurntSushi/toml"
+	"github.com/BurntSushi/toml"
 	"cursheet/shared"
 //	"github.com/spf13/viper"
 	"runtime"
@@ -31,8 +33,8 @@ var resultSet = &ora.Rset{}
 func main() {
 
 	defer os.Exit(0)
-	//var newConfig	cursheet.Config
-	//var newCol		cursheet.Column
+	var newConfig	cursheet.Config
+	var newCol		cursheet.Column
 
 	var inputParams []inParam
 	var curParam inParam
@@ -131,13 +133,28 @@ func main() {
 		fmt.Printf("Could not execute statement %s", err)
 	}
 
+	newConfig.Title = "New Procedure"
+	newConfig.Schema = cursheet.Schema
+	newConfig.Procedure = cursheet.StoredProc
+
 	if resultSet.IsOpen() {
-		for _, test := range resultSet.Columns {
-			fmt.Println(test.Name)
+		for i, test := range resultSet.Columns {
+			newCol.Name = test.Name
+			newCol.LogPos = i + 1
+			newCol.Ctype = cursheet.DatatypeToString(test.Type)
+			newConfig.Cols = append(newConfig.Cols, newCol)
 		}
 	} else {
 		fmt.Println("that didn't work.")
 	}
+
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(newConfig); err != nil {
+		fmt.Printf("Could not generate config: %s", err)
+	} 
+
+	fmt.Println(buf)
+
 }
 
 
