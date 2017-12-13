@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"cursheet/shared"
+	"github.com/jazzboME/cursheet/shared"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"gopkg.in/rana/ora.v4"
