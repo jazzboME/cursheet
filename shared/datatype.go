@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// DatatypeToString converts an internal Oracle datatype to a human readable description.
 func DatatypeToString (datatype interface{}) string{
 	
 	str := fmt.Sprintf("%v", datatype)
