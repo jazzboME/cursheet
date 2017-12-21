@@ -4,7 +4,7 @@ import (
 	"gopkg.in/rana/ora.v4"
 	"fmt"
 	"github.com/spf13/viper"
-	"cursheet/shared"
+	"github.com/jazzboME/cursheet/shared"
 )
 
 //var database = viper.New()

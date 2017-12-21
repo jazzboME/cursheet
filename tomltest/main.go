@@ -2,16 +2,16 @@ package main
 
 import (
 	//"os"
-	"log"
-		"bytes"
+	"bytes"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/jazzboME/cursheet/shared"
 	"github.com/spf13/viper"
-	"cursheet/shared"
+	"log"
 )
 
 func main() {
-	
+
 	var c cursheet.Config
 	var col cursheet.Column
 
@@ -28,16 +28,16 @@ func main() {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(c); err != nil {
 		log.Fatal(err)
-	} 
+	}
 
 	viper.SetConfigType("toml")
 	viper.ReadConfig(buf)
 
 	var z cursheet.Config
 	err := viper.Unmarshal(&z)
-		if err != nil {
-			panic(err)
-		}
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println(len(z.Cols))
 	fmt.Println(z.Cols[1].Name)
