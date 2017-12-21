@@ -4,7 +4,7 @@ package cursheet
 type Column struct {
 	Name	string
 	Ctype	string
-	Size	int
+	Size	uint32
 	LogPos	int
 }
 
