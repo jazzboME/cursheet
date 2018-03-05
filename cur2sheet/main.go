@@ -27,6 +27,7 @@ func main() {
 	defer srv.Close()
 	defer ses.Close()
 
+	/*
 	stmtProcCall, err := ses.Prep("Call vft_match_report(:1, :2)")
 	if err != nil {
 		panic(fmt.Errorf("Procedure call prep failed: %s", err))
@@ -37,23 +38,52 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("Could not execute statement %s", err))
 	}
+	*/
 
 	deffile.SetConfigName(cursheet.DefFileName)
 	deffile.AddConfigPath(".")
 	deffile.AddConfigPath(cursheet.HomeDir)
 	err = deffile.ReadInConfig()
-	
+
 	if err != nil {
 		panic(fmt.Errorf("Error reading configuration file: %s",err))
 	} else {
 		fmt.Println("Column definition file read successfully.")
 	}
 
+	var z cursheet.Config
+	err = deffile.Unmarshal(&z)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(z.Cols)
+	fmt.Println(z.Title)
+
+	procCall := "Call " + deffile.GetString("Schema") + "." + deffile.GetString("Procedure") + "(:1)"
+	stmtProcCall, err := ses.Prep(procCall)
+	if err != nil {
+		panic(fmt.Errorf("Procedure call prep failed: %s %s", procCall, err))
+	}
+	defer stmtProcCall.Close()
+
+	_, err = stmtProcCall.Exe(resultSet)
+	if err != nil {
+		panic(fmt.Errorf("Could not execute statement\n %s\n %s", procCall, err))
+	}
+
 	fmt.Println(deffile.GetString("Title"))
 
 	if resultSet.IsOpen() {
-		for _, test := range resultSet.Columns {
+		// heading information
+		for x, test := range resultSet.Columns {
 			fmt.Println(test.Name)
+			fmt.Println(z.Cols[x].Name, z.Cols[x].LogPos)					
+		}
+		for resultSet.Next() {
+			for y, eachcol := range resultSet.Row {
+				value := eachcol.(string)
+				fmt.Println(value, z.Cols[y].ShowPos)
+			}			
 		}
 	} else {
 		fmt.Println("Yikes, didn't survive.")
