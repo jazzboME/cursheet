@@ -142,6 +142,7 @@ func main() {
 			newCol.LogPos = i + 1
 			newCol.Ctype = cursheet.DatatypeToString(test.Type)
 			newCol.Size = test.Length
+			newCol.ShowPos = i + 1
 			newConfig.Cols = append(newConfig.Cols, newCol)
 		}
 	} else {

@@ -6,6 +6,7 @@ type Column struct {
 	Ctype	string
 	Size	uint32
 	LogPos	int
+	ShowPos int
 }
 
 // Config defines the mapping between the cursor and the output sheet
