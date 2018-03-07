@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/tealeg/xlsx"
 	"gopkg.in/rana/ora.v4"
 	"fmt"
 	"github.com/spf13/viper"
@@ -27,19 +28,6 @@ func main() {
 	defer srv.Close()
 	defer ses.Close()
 
-	/*
-	stmtProcCall, err := ses.Prep("Call vft_match_report(:1, :2)")
-	if err != nil {
-		panic(fmt.Errorf("Procedure call prep failed: %s", err))
-	}
-	defer stmtProcCall.Close()
-
-	_, err = stmtProcCall.Exe("O5903", resultSet)
-	if err != nil {
-		panic(fmt.Errorf("Could not execute statement %s", err))
-	}
-	*/
-
 	deffile.SetConfigName(cursheet.DefFileName)
 	deffile.AddConfigPath(".")
 	deffile.AddConfigPath(cursheet.HomeDir)
@@ -52,12 +40,15 @@ func main() {
 	}
 
 	var z cursheet.Config
+
 	err = deffile.Unmarshal(&z)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(z.Cols)
 	fmt.Println(z.Title)
+
+	numDefCols := len(z.Cols)
 
 	procCall := "Call " + deffile.GetString("Schema") + "." + deffile.GetString("Procedure") + "(:1)"
 	stmtProcCall, err := ses.Prep(procCall)
@@ -71,22 +62,47 @@ func main() {
 		panic(fmt.Errorf("Could not execute statement\n %s\n %s", procCall, err))
 	}
 
-	fmt.Println(deffile.GetString("Title"))
-
 	if resultSet.IsOpen() {
-		// heading information
-		for x, test := range resultSet.Columns {
-			fmt.Println(test.Name)
-			fmt.Println(z.Cols[x].Name, z.Cols[x].LogPos)					
+		numCurCols := len(resultSet.Columns)
+
+		if numCurCols != numDefCols {
+			fmt.Println("Warning: Defined(", numDefCols, ") and available(", numCurCols, ") columns differ")
 		}
+
+		excel := xlsx.NewFile()
+		sheet, err := excel.AddSheet("Sheet1")
+		if err != nil {
+			panic(fmt.Errorf("Could not add sheet: %s", err))
+		}
+
+		// heading information
+		fmt.Println(numCurCols, "Columns in cursor")
+
+		for x, test := range resultSet.Columns {
+			cell := sheet.Cell(0, z.Cols[x].ShowPos - 1)
+			cell.Value = test.Name
+		}
+		curRow := 0
+		
 		for resultSet.Next() {
+			curRow++	
+
 			for y, eachcol := range resultSet.Row {
 				value := eachcol.(string)
-				fmt.Println(value, z.Cols[y].ShowPos)
+
+				cell := sheet.Cell(curRow, z.Cols[y].ShowPos -1)
+				cell.Value = value
 			}			
+		}
+
+		err = excel.Save("testfile.xlsx")
+		if err != nil {
+			fmt.Println("Could not save file", err)
 		}
 	} else {
 		fmt.Println("Yikes, didn't survive.")
 	}
+
+	
 	
 }
