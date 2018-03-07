@@ -19,3 +19,6 @@
 
 # Should exclude .toml files from final commits
 *.toml
+
+# Should exclude generated .xlsx files
+*.xlsx
