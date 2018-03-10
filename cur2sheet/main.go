@@ -70,7 +70,7 @@ func main() {
 		}
 
 		excel := xlsx.NewFile()
-		xlsx.SetDefaultFont(deffile.GetInt("Typesize"), deffile.GetString("Typeface"))
+		xlsx.SetDefaultFont(z.Typesize, z.Typeface)
 		sheet, err := excel.AddSheet("Sheet1")
 		if err != nil {
 			panic(fmt.Errorf("Could not add sheet: %s", err))
@@ -78,9 +78,9 @@ func main() {
 
 		// heading information
 		fmt.Println(numCurCols, "Columns in cursor")
-		headerFont := xlsx.NewFont(deffile.GetInt("Typesize"), deffile.GetString("Typeface"))
-		headerFont.Bold = deffile.GetBool("HeadBold")
-		headerFont.Italic = deffile.GetBool("HeadItalic")
+		headerFont := xlsx.NewFont(z.Typesize, z.Typeface)
+		headerFont.Bold = z.HeadBold
+		headerFont.Italic = z.HeadItalic
 		headerStyle := xlsx.NewStyle()
 		headerStyle.Font = *headerFont
 
@@ -89,17 +89,30 @@ func main() {
 			cell := sheet.Cell(0, curCol.ShowPos)
 			cell.Value = curCol.Name
 			cell.SetStyle(headerStyle)
-			sheet.SetColWidth( curCol.ShowPos, curCol.ShowPos, curCol.Size)
+			sheet.SetColWidth(curCol.ShowPos, curCol.ShowPos, curCol.Size)
 		}
 		curRow := 0
 		
+		// Load the column styles
+		colStyles := make([]*xlsx.Style, numDefCols)
+		colFonts := make([]*xlsx.Font, numDefCols)
+		for i:= range z.Cols {
+			colStyles[i] = new(xlsx.Style)
+			colFonts[i] = xlsx.NewFont(z.Typesize, z.Typeface)
+			colFonts[i].Bold = z.Cols[i].Bold
+			colFonts[i].Italic = z.Cols[i].Italic
+			colStyles[i].Font = *colFonts[i]
+		}
+
 		for resultSet.Next() {
 			curRow++	
 
+			// Load each cell, and set style
 			for y, eachcol := range resultSet.Row {
 				value := eachcol.(string)
 				cell := sheet.Cell(curRow, z.Cols[y].ShowPos)
 				cell.Value = value
+				cell.SetStyle(colStyles[y])
 			}			
 		}
 
@@ -110,7 +123,5 @@ func main() {
 	} else {
 		fmt.Println("Yikes, didn't survive.")
 	}
-
-	
 	
 }
