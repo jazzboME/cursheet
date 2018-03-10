@@ -4,15 +4,22 @@ package cursheet
 type Column struct {
 	Name	string
 	Ctype	string
-	Size	uint32
+	Size	float64
 	LogPos	int
 	ShowPos int
+	Italic	bool
+	Bold	bool
+	Sum		bool
 }
 
 // Config defines the mapping between the cursor and the output sheet
 type Config struct {
 	Title		string
 	Schema		string
-	Procedure	string 
+	Procedure	string
+	Typeface	string
+	Typesize	int
+	HeadItalic	bool
+	HeadBold	bool 
 	Cols		[]Column
 }
