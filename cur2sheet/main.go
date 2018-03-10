@@ -70,6 +70,7 @@ func main() {
 		}
 
 		excel := xlsx.NewFile()
+		xlsx.SetDefaultFont(deffile.GetInt("Typesize"), deffile.GetString("Typeface"))
 		sheet, err := excel.AddSheet("Sheet1")
 		if err != nil {
 			panic(fmt.Errorf("Could not add sheet: %s", err))
@@ -77,10 +78,18 @@ func main() {
 
 		// heading information
 		fmt.Println(numCurCols, "Columns in cursor")
+		headerFont := xlsx.NewFont(deffile.GetInt("Typesize"), deffile.GetString("Typeface"))
+		headerFont.Bold = deffile.GetBool("HeadBold")
+		headerFont.Italic = deffile.GetBool("HeadItalic")
+		headerStyle := xlsx.NewStyle()
+		headerStyle.Font = *headerFont
 
-		for x, test := range resultSet.Columns {
-			cell := sheet.Cell(0, z.Cols[x].ShowPos - 1)
-			cell.Value = test.Name
+		for x := range resultSet.Columns {
+			curCol := z.Cols[x]
+			cell := sheet.Cell(0, curCol.ShowPos)
+			cell.Value = curCol.Name
+			cell.SetStyle(headerStyle)
+			sheet.SetColWidth( curCol.ShowPos, curCol.ShowPos, curCol.Size)
 		}
 		curRow := 0
 		
@@ -89,8 +98,7 @@ func main() {
 
 			for y, eachcol := range resultSet.Row {
 				value := eachcol.(string)
-
-				cell := sheet.Cell(curRow, z.Cols[y].ShowPos -1)
+				cell := sheet.Cell(curRow, z.Cols[y].ShowPos)
 				cell.Value = value
 			}			
 		}
