@@ -50,6 +50,7 @@ func main() {
 
 	numDefCols := len(cursorDef.Cols)
 
+	// Note, assumes no parameters to cursor call
 	procCall := "Call " + cursorDef.Schema + "." + cursorDef.Procedure + "(:1)"
 	stmtProcCall, err := ses.Prep(procCall)
 	if err != nil {
@@ -84,8 +85,8 @@ func main() {
 		headerStyle := xlsx.NewStyle()
 		headerStyle.Font = *headerFont
 
-		for x := range resultSet.Columns {
-			curCol := cursorDef.Cols[x]
+		for colNum := range resultSet.Columns {
+			curCol := cursorDef.Cols[colNum]
 			cell := sheet.Cell(0, curCol.ShowPos)
 			cell.Value = curCol.Name
 			cell.SetStyle(headerStyle)
@@ -96,23 +97,23 @@ func main() {
 		// Load the column styles
 		colStyles := make([]*xlsx.Style, numDefCols)
 		colFonts := make([]*xlsx.Font, numDefCols)
-		for i := range cursorDef.Cols {
-			colStyles[i] = new(xlsx.Style)
-			colFonts[i] = xlsx.NewFont(cursorDef.Typesize, cursorDef.Typeface)
-			colFonts[i].Bold = cursorDef.Cols[i].Bold
-			colFonts[i].Italic = cursorDef.Cols[i].Italic
-			colStyles[i].Font = *colFonts[i]
+		for curCol := range cursorDef.Cols {
+			colStyles[curCol] = new(xlsx.Style)
+			colFonts[curCol] = xlsx.NewFont(cursorDef.Typesize, cursorDef.Typeface)
+			colFonts[curCol].Bold = cursorDef.Cols[curCol].Bold
+			colFonts[curCol].Italic = cursorDef.Cols[curCol].Italic
+			colStyles[curCol].Font = *colFonts[curCol]
 		}
 
 		for resultSet.Next() {
 			curRow++
 
 			// Load each cell, and set style
-			for y, eachcol := range resultSet.Row {
-				value := eachcol.(string)
-				cell := sheet.Cell(curRow, cursorDef.Cols[y].ShowPos)
+			for curCol, colData := range resultSet.Row {
+				value := colData.(string)
+				cell := sheet.Cell(curRow, cursorDef.Cols[curCol].ShowPos)
 				cell.Value = value
-				cell.SetStyle(colStyles[y])
+				cell.SetStyle(colStyles[curCol])
 			}
 		}
 
