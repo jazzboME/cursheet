@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"github.com/jazzboME/cursheet/shared"
+	"github.com/spf13/viper"
 	"github.com/tealeg/xlsx"
 	"gopkg.in/rana/ora.v4"
-	"fmt"
-	"github.com/spf13/viper"
-	"github.com/jazzboME/cursheet/shared"
 )
 
 //var database = viper.New()
@@ -17,8 +17,8 @@ func main() {
 	fmt.Println(cursheet.Database.GetString("database.tns"))
 
 	oraconn := cursheet.Database.GetString("credentials.user") + "/" +
-				cursheet.Database.GetString("credentials.password") + "@" +
-				cursheet.Database.GetString("database.tns")
+		cursheet.Database.GetString("credentials.password") + "@" +
+		cursheet.Database.GetString("database.tns")
 
 	env, srv, ses, err := ora.NewEnvSrvSes(oraconn)
 	if err != nil {
@@ -34,23 +34,23 @@ func main() {
 	err = deffile.ReadInConfig()
 
 	if err != nil {
-		panic(fmt.Errorf("Error reading configuration file: %s",err))
+		panic(fmt.Errorf("Error reading configuration file: %s", err))
 	} else {
 		fmt.Println("Column definition file read successfully.")
 	}
 
-	var z cursheet.Config
+	var cursorDef cursheet.Config
 
-	err = deffile.Unmarshal(&z)
+	err = deffile.Unmarshal(&cursorDef)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(z.Cols)
-	fmt.Println(z.Title)
+	fmt.Println(cursorDef.Cols)
+	fmt.Println(cursorDef.Title)
 
-	numDefCols := len(z.Cols)
+	numDefCols := len(cursorDef.Cols)
 
-	procCall := "Call " + deffile.GetString("Schema") + "." + deffile.GetString("Procedure") + "(:1)"
+	procCall := "Call " + cursorDef.Schema + "." + cursorDef.Procedure + "(:1)"
 	stmtProcCall, err := ses.Prep(procCall)
 	if err != nil {
 		panic(fmt.Errorf("Procedure call prep failed: %s %s", procCall, err))
@@ -70,7 +70,7 @@ func main() {
 		}
 
 		excel := xlsx.NewFile()
-		xlsx.SetDefaultFont(z.Typesize, z.Typeface)
+		xlsx.SetDefaultFont(cursorDef.Typesize, cursorDef.Typeface)
 		sheet, err := excel.AddSheet("Sheet1")
 		if err != nil {
 			panic(fmt.Errorf("Could not add sheet: %s", err))
@@ -78,42 +78,42 @@ func main() {
 
 		// heading information
 		fmt.Println(numCurCols, "Columns in cursor")
-		headerFont := xlsx.NewFont(z.Typesize, z.Typeface)
-		headerFont.Bold = z.HeadBold
-		headerFont.Italic = z.HeadItalic
+		headerFont := xlsx.NewFont(cursorDef.Typesize, cursorDef.Typeface)
+		headerFont.Bold = cursorDef.HeadBold
+		headerFont.Italic = cursorDef.HeadItalic
 		headerStyle := xlsx.NewStyle()
 		headerStyle.Font = *headerFont
 
 		for x := range resultSet.Columns {
-			curCol := z.Cols[x]
+			curCol := cursorDef.Cols[x]
 			cell := sheet.Cell(0, curCol.ShowPos)
 			cell.Value = curCol.Name
 			cell.SetStyle(headerStyle)
 			sheet.SetColWidth(curCol.ShowPos, curCol.ShowPos, curCol.Size)
 		}
 		curRow := 0
-		
+
 		// Load the column styles
 		colStyles := make([]*xlsx.Style, numDefCols)
 		colFonts := make([]*xlsx.Font, numDefCols)
-		for i:= range z.Cols {
+		for i := range cursorDef.Cols {
 			colStyles[i] = new(xlsx.Style)
-			colFonts[i] = xlsx.NewFont(z.Typesize, z.Typeface)
-			colFonts[i].Bold = z.Cols[i].Bold
-			colFonts[i].Italic = z.Cols[i].Italic
+			colFonts[i] = xlsx.NewFont(cursorDef.Typesize, cursorDef.Typeface)
+			colFonts[i].Bold = cursorDef.Cols[i].Bold
+			colFonts[i].Italic = cursorDef.Cols[i].Italic
 			colStyles[i].Font = *colFonts[i]
 		}
 
 		for resultSet.Next() {
-			curRow++	
+			curRow++
 
 			// Load each cell, and set style
 			for y, eachcol := range resultSet.Row {
 				value := eachcol.(string)
-				cell := sheet.Cell(curRow, z.Cols[y].ShowPos)
+				cell := sheet.Cell(curRow, cursorDef.Cols[y].ShowPos)
 				cell.Value = value
 				cell.SetStyle(colStyles[y])
-			}			
+			}
 		}
 
 		err = excel.Save("testfile.xlsx")
@@ -123,5 +123,5 @@ func main() {
 	} else {
 		fmt.Println("Yikes, didn't survive.")
 	}
-	
+
 }
