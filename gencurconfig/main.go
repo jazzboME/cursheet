@@ -45,9 +45,9 @@ func main() {
 	}
 
 	if cursheet.Schema == "" {
-		fmt.Println("Schema must be defined with -schema")
-		runtime.Goexit()
+		cursheet.Schema = cursheet.Database.GetString("credentials.user")
 	}
+
 	oraconn := cursheet.Database.GetString("credentials.user") + "/" +
 		cursheet.Database.GetString("credentials.password") + "@" +
 		cursheet.Database.GetString("database.tns")
@@ -135,14 +135,16 @@ func main() {
 	newConfig.Title = "New Procedure"
 	newConfig.Schema = cursheet.Schema
 	newConfig.Procedure = cursheet.StoredProc
+	newConfig.Typeface = "Verdana"
+	newConfig.Typesize = 10
 
 	if resultSet.IsOpen() {
 		for i, test := range resultSet.Columns {
 			newCol.Name = test.Name
-			newCol.LogPos = i + 1
+			newCol.LogPos = i + 1								// 1 index
 			newCol.Ctype = cursheet.DatatypeToString(test.Type)
-			newCol.Size = test.Length
-			newCol.ShowPos = i + 1
+			newCol.Size = float64(test.Length)
+			newCol.ShowPos = i									// 0 index
 			newConfig.Cols = append(newConfig.Cols, newCol)
 		}
 	} else {
