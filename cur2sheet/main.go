@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(cursorDef.Cols)
+	//fmt.Println(cursorDef.Cols)
 	fmt.Println(cursorDef.Title)
 
 	numDefCols := len(cursorDef.Cols)
@@ -96,7 +96,6 @@ func main() {
 			// Set to larger of current data and the current size.
 			curCol.Size = math.Max(curCol.Size, float64(len([]rune(curCol.Name))))			
 			sheet.Cols[curCol.ShowPos].Width = curCol.Size + 1.0
-			fmt.Println(curCol.Name, curCol.Size, curCol.ShowPos, float64(sheet.Cols[curCol.ShowPos].Width))
 		}
 		curRow := 0
 
@@ -111,6 +110,7 @@ func main() {
 
 			// Load each cell, and set style
 			for curCol, colData := range resultSet.Row {
+				var addr = 1
 				curColDef := cursorDef.Cols[curCol]
 				cell := sheet.Cell(curRow, curColDef.ShowPos)
 				switch curColDef.Ctype {
@@ -118,12 +118,19 @@ func main() {
 					cell.Value = colData.(string)
 				case "NUMBER":
 					cell.SetFloat(colData.(float64))
+					if curColDef.Format != "" {
+						cell.NumFmt = curColDef.Format
+						addr = 2
+					}
 				default:
 					cell.Value = "???"
 				}
 				cell.SetStyle(colStyles[curCol])
-				curColDef.Size = math.Max(sheet.Cols[curColDef.ShowPos].Width, float64(len([]rune(cell.Value)) + 1))
-				sheet.Cols[curColDef.ShowPos].Width = curColDef.Size
+				fmtvalue, _ := cell.FormattedValue()			
+
+				if float64(len([]rune(fmtvalue)) + addr) > sheet.Cols[curColDef.ShowPos].Width {
+					sheet.Cols[curColDef.ShowPos].Width = float64(len([]rune(fmtvalue)) + addr)
+				}
 			}
 		}
 
