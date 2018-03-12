@@ -12,6 +12,8 @@ type Column struct {
 	LogPos		int
 	ShowPos 	int
 	Sum			bool
+	Subtotal	bool
+	Subflags	[]string
 	Style		xlsx.Style
 }
 
