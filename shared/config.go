@@ -8,6 +8,7 @@ import (
 type Column struct {
 	Name		string
 	Ctype		string
+	Format		string
 	Size		float64
 	LogPos		int
 	ShowPos 	int
