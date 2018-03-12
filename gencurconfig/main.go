@@ -135,8 +135,8 @@ func main() {
 	newConfig.Title = "New Procedure"
 	newConfig.Schema = cursheet.Schema
 	newConfig.Procedure = cursheet.StoredProc
-	newConfig.Typeface = "Verdana"
-	newConfig.Typesize = 10
+	newConfig.Typeface = "Consolas"
+	newConfig.Typesize = 9
 
 	if resultSet.IsOpen() {
 		for i, test := range resultSet.Columns {
