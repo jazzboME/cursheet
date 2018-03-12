@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"fmt"
 	"github.com/jazzboME/cursheet/shared"
 	"github.com/spf13/viper"
@@ -90,7 +91,12 @@ func main() {
 			cell := sheet.Cell(0, curCol.ShowPos)
 			cell.Value = curCol.Name
 			cell.SetStyle(headerStyle)
-			sheet.SetColWidth(curCol.ShowPos, curCol.ShowPos, curCol.Size)
+			// Set to smaller incase the cursor set the length very long (e.g. 4000 from varchar2 function)
+			curCol.Size = math.Min(curCol.Size, float64(len([]rune(curCol.Name)) + 1))
+			// Set to larger of current data and the current size.
+			curCol.Size = math.Max(curCol.Size, float64(len([]rune(curCol.Name))))			
+			sheet.Cols[curCol.ShowPos].Width = curCol.Size + 1.0
+			fmt.Println(curCol.Name, curCol.Size, curCol.ShowPos, float64(sheet.Cols[curCol.ShowPos].Width))
 		}
 		curRow := 0
 
@@ -105,10 +111,19 @@ func main() {
 
 			// Load each cell, and set style
 			for curCol, colData := range resultSet.Row {
-				value := colData.(string)
-				cell := sheet.Cell(curRow, cursorDef.Cols[curCol].ShowPos)
-				cell.Value = value
+				curColDef := cursorDef.Cols[curCol]
+				cell := sheet.Cell(curRow, curColDef.ShowPos)
+				switch curColDef.Ctype {
+				case "VARCHAR2":
+					cell.Value = colData.(string)
+				case "NUMBER":
+					cell.SetFloat(colData.(float64))
+				default:
+					cell.Value = "???"
+				}
 				cell.SetStyle(colStyles[curCol])
+				curColDef.Size = math.Max(sheet.Cols[curColDef.ShowPos].Width, float64(len([]rune(cell.Value)) + 1))
+				sheet.Cols[curColDef.ShowPos].Width = curColDef.Size
 			}
 		}
 
