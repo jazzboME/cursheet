@@ -1,15 +1,18 @@
 package cursheet
 
+import (
+	"github.com/tealeg/xlsx"
+)
+
 // Column defines the attributes of the individual columns in the speadsheet
 type Column struct {
-	Name	string
-	Ctype	string
-	Size	float64
-	LogPos	int
-	ShowPos int
-	Italic	bool
-	Bold	bool
-	Sum		bool
+	Name		string
+	Ctype		string
+	Size		float64
+	LogPos		int
+	ShowPos 	int
+	Sum			bool
+	Style		xlsx.Style
 }
 
 // Config defines the mapping between the cursor and the output sheet

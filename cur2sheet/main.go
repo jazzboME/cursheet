@@ -96,15 +96,10 @@ func main() {
 
 		// Load the column styles
 		colStyles := make([]*xlsx.Style, numDefCols)
-		colFonts := make([]*xlsx.Font, numDefCols)
 		for curCol := range cursorDef.Cols {
-			colStyles[curCol] = new(xlsx.Style)
-			colFonts[curCol] = xlsx.NewFont(cursorDef.Typesize, cursorDef.Typeface)
-			colFonts[curCol].Bold = cursorDef.Cols[curCol].Bold
-			colFonts[curCol].Italic = cursorDef.Cols[curCol].Italic
-			colStyles[curCol].Font = *colFonts[curCol]
+			colStyles[curCol] = &cursorDef.Cols[curCol].Style
 		}
-
+		
 		for resultSet.Next() {
 			curRow++
 

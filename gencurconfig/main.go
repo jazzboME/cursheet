@@ -145,6 +145,8 @@ func main() {
 			newCol.Ctype = cursheet.DatatypeToString(test.Type)
 			newCol.Size = float64(test.Length)
 			newCol.ShowPos = i									// 0 index
+			newCol.Style.Font.Name = newConfig.Typeface
+			newCol.Style.Font.Size = newConfig.Typesize
 			newConfig.Cols = append(newConfig.Cols, newCol)
 		}
 	} else {
