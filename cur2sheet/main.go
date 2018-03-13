@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
+	"time"
 	"github.com/jazzboME/cursheet/shared"
 	"github.com/spf13/viper"
 	"github.com/tealeg/xlsx"
@@ -226,7 +227,9 @@ func main() {
 		fmt.Println(cursorDef.SubjLine)
 		err = ioutil.WriteFile("subjline.txt", []byte(cursorDef.SubjLine), 0600)
 		// filename format should be passed from config
-		err = excel.Save("testfile.xlsx")
+		outFile := "./daily-gift-report-" + time.Now().Format("20060102") + ".xlsx"
+
+		err = excel.Save(outFile)
 		if err != nil {
 			fmt.Println("Could not save file", err)
 		}
