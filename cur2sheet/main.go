@@ -227,7 +227,7 @@ func main() {
 		fmt.Println(cursorDef.SubjLine)
 		err = ioutil.WriteFile("subjline.txt", []byte(cursorDef.SubjLine), 0600)
 		// filename format should be passed from config
-		outFile := "./daily-gift-report-" + time.Now().Format("20060102") + ".xlsx"
+		outFile := "./" + cursorDef.Filename + "-" + time.Now().Format("20060102") + ".xlsx"
 
 		err = excel.Save(outFile)
 		if err != nil {

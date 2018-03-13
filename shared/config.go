@@ -26,6 +26,7 @@ type Column struct {
 type Config struct {
 	Title		string
 	SubjLine	string
+	Filename	string
 	Schema		string
 	Procedure	string
 	Typeface	string
