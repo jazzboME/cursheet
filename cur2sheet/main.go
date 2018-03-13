@@ -136,6 +136,11 @@ func main() {
 							cell := sheet.Cell(curRow, x)
 							cell.SetFormula(formula)
 							cell.NumFmt = "#,##0.00"
+							fmtvalue, _ := cell.FormattedValue()			
+
+							if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[x].Width {
+								sheet.Cols[x].Width = float64(len([]rune(fmtvalue)) + 2)								
+							}
 							subtotal = 0
 							subcount = 1
 							subflag++
@@ -179,13 +184,19 @@ func main() {
 			curRow++
 			subtotals[subflag].count = subcount
 			subtotals[subflag].subtotal = subtotal
-			curColRef := xlsx.ColIndexToLetters(cursorDef.SubCol - 1)
+			subtotalcol := cursorDef.SubCol - 1
+			curColRef := xlsx.ColIndexToLetters(subtotalcol)
 			formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
 								curColRef + strconv.Itoa(curRow) + ")"
 			fmt.Println(formula)
-			cell := sheet.Cell(curRow, cursorDef.SubCol - 1)
+			cell := sheet.Cell(curRow, subtotalcol)
 			cell.SetFormula(formula)
 			cell.NumFmt = "#,##0.00"
+			fmtvalue, _ := cell.FormattedValue()			
+
+			if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
+				sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
+			}
 		}
 
 		for x := range subtotals {
