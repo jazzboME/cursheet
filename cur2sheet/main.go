@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"math"
 	"fmt"
 	"strings"
@@ -223,6 +224,7 @@ func main() {
 		
 		// need to write this to local file
 		fmt.Println(cursorDef.SubjLine)
+		err = ioutil.WriteFile("subjline.txt", []byte(cursorDef.SubjLine), 0600)
 		// filename format should be passed from config
 		err = excel.Save("testfile.xlsx")
 		if err != nil {
