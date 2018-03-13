@@ -4,6 +4,11 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
+// Flag holds any multi-variable fields
+type Flag struct {
+	Flag		string	
+}
+
 // Column defines the attributes of the individual columns in the speadsheet
 type Column struct {
 	Name		string
@@ -14,18 +19,22 @@ type Column struct {
 	ShowPos 	int
 	Sum			bool
 	Subtotal	bool
-	Subflags	[]string
 	Style		xlsx.Style
 }
 
 // Config defines the mapping between the cursor and the output sheet
 type Config struct {
 	Title		string
+	SubjLine	string
 	Schema		string
 	Procedure	string
 	Typeface	string
 	Typesize	int
 	HeadItalic	bool
-	HeadBold	bool 
+	HeadBold	bool
+	FreezeRows	float64
+	Subtotal	bool
+	SubCol		int
+	Subflags	[]Flag
 	Cols		[]Column
 }
