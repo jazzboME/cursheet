@@ -3,17 +3,28 @@ package main
 import (
 	"math"
 	"fmt"
+	"strings"
+	"strconv"
 	"github.com/jazzboME/cursheet/shared"
 	"github.com/spf13/viper"
 	"github.com/tealeg/xlsx"
 	"gopkg.in/rana/ora.v4"
 )
 
+type subtotaldata struct {
+	count		int
+	subtotal	float64
+}
+
 //var database = viper.New()
 var deffile = viper.New()
 var resultSet = &ora.Rset{}
 
 func main() {
+	var subtotal = 0.0
+	var subflag = 0
+	var subcount = 0
+
 	fmt.Println("Main Program.")
 	fmt.Println(cursheet.Database.GetString("database.tns"))
 
@@ -49,6 +60,7 @@ func main() {
 	//fmt.Println(cursorDef.Cols)
 	fmt.Println(cursorDef.Title)
 
+	subtotals := make([]subtotaldata, len(cursorDef.Subflags))
 	numDefCols := len(cursorDef.Cols)
 
 	// Note, assumes no parameters to cursor call
@@ -98,6 +110,7 @@ func main() {
 			sheet.Cols[curCol.ShowPos].Width = curCol.Size + 1.0
 		}
 		curRow := 0
+		substart := 2
 
 		// Load the column styles
 		colStyles := make([]*xlsx.Style, numDefCols)
@@ -107,6 +120,31 @@ func main() {
 		
 		for resultSet.Next() {
 			curRow++
+			subcount++
+
+			if len(cursorDef.Subflags) > 0 {
+				if resultSet.Row[cursorDef.SubCol] == cursorDef.Subflags[subflag].Flag {
+					
+					for x, cols := range cursorDef.Cols {
+						if cols.Subtotal == true {
+							subtotals[subflag].count = subcount - 1
+							subtotals[subflag].subtotal = subtotal
+							curColRef := xlsx.ColIndexToLetters(x)
+							formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
+												curColRef + strconv.Itoa(curRow) + ")"
+							fmt.Println(formula)
+							cell := sheet.Cell(curRow, x)
+							cell.SetFormula(formula)
+							cell.NumFmt = "#,##0.00"
+							subtotal = 0
+							subcount = 1
+							subflag++
+							curRow = curRow + 2
+							substart = curRow
+						}
+					}
+				}
+			}
 
 			// Load each cell, and set style
 			for curCol, colData := range resultSet.Row {
@@ -122,6 +160,9 @@ func main() {
 						cell.NumFmt = curColDef.Format
 						addr = 2
 					}
+					if curColDef.Subtotal == true {
+						subtotal += colData.(float64)
+					}
 				default:
 					cell.Value = "???"
 				}
@@ -134,6 +175,44 @@ func main() {
 			}
 		}
 
+		if cursorDef.Subtotal == true {
+			curRow++
+			subtotals[subflag].count = subcount
+			subtotals[subflag].subtotal = subtotal
+			curColRef := xlsx.ColIndexToLetters(cursorDef.SubCol - 1)
+			formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
+								curColRef + strconv.Itoa(curRow) + ")"
+			fmt.Println(formula)
+			cell := sheet.Cell(curRow, cursorDef.SubCol - 1)
+			cell.SetFormula(formula)
+			cell.NumFmt = "#,##0.00"
+		}
+
+		for x := range subtotals {
+			countmkr := "$count" + strconv.Itoa(x + 1)
+			countval := strconv.Itoa(subtotals[x].count)
+			summkr := "$sum" + strconv.Itoa(x + 1)
+			sumval := "$" + strconv.FormatFloat(subtotals[x].subtotal, 'f', 2, 64)
+			cursorDef.SubjLine = strings.Replace(cursorDef.SubjLine, countmkr, countval, 1)
+			cursorDef.SubjLine = strings.Replace(cursorDef.SubjLine, summkr, sumval, 1)
+		}
+
+		// Freeze top rows
+		sheet.SheetViews = []xlsx.SheetView{
+            xlsx.SheetView{
+                Pane: &xlsx.Pane{
+                    XSplit:      0,
+                    YSplit:      cursorDef.FreezeRows,
+                    ActivePane:  "bottomLeft",
+                    TopLeftCell: "A2",
+                    State:       "frozen",
+                },
+            },
+		}
+		
+		// need to write this to local file
+		fmt.Println(cursorDef.SubjLine)
+		// filename format should be passed from config
 		err = excel.Save("testfile.xlsx")
 		if err != nil {
 			fmt.Println("Could not save file", err)
