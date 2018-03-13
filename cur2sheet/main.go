@@ -147,7 +147,7 @@ func main() {
 							subcount = 1
 							subflag++
 							curRow = curRow + 2
-							substart = curRow
+							substart = curRow + 1
 						}
 					}
 				}
