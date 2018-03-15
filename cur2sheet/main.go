@@ -10,6 +10,8 @@ import (
 	"github.com/jazzboME/cursheet/shared"
 	"github.com/spf13/viper"
 	"github.com/tealeg/xlsx"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"gopkg.in/rana/ora.v4"
 )
 
@@ -126,30 +128,31 @@ func main() {
 
 			if len(cursorDef.Subflags) > 0 {
 				if resultSet.Row[cursorDef.SubCol] == cursorDef.Subflags[subflag].Flag {
-					
-					for x, cols := range cursorDef.Cols {
-						if cols.Subtotal == true {
-							subtotals[subflag].count = subcount - 1
-							subtotals[subflag].subtotal = subtotal
-							curColRef := xlsx.ColIndexToLetters(x)
-							formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
-												curColRef + strconv.Itoa(curRow) + ")"
-							fmt.Println(formula)
-							cell := sheet.Cell(curRow, x)
-							cell.SetFormula(formula)
-							cell.NumFmt = "#,##0.00"
-							fmtvalue, _ := cell.FormattedValue()			
+					if curRow >= substart {
+						for x, cols := range cursorDef.Cols {
+							if cols.Subtotal == true {
+								subtotals[subflag].count = subcount - 1
+								subtotals[subflag].subtotal = subtotal
+								curColRef := xlsx.ColIndexToLetters(x)
+								formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
+													curColRef + strconv.Itoa(curRow) + ")"
+								fmt.Println(formula)
+								cell := sheet.Cell(curRow, x)
+								cell.SetFormula(formula)
+								cell.NumFmt = "#,##0.00"
+								fmtvalue, _ := cell.FormattedValue()			
 
-							if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[x].Width {
-								sheet.Cols[x].Width = float64(len([]rune(fmtvalue)) + 2)								
+								if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[x].Width {
+									sheet.Cols[x].Width = float64(len([]rune(fmtvalue)) + 2)								
+								}								
+								subtotal = 0
+								subcount = 1
+								curRow = curRow + 2
+								substart = curRow + 1
 							}
-							subtotal = 0
-							subcount = 1
-							subflag++
-							curRow = curRow + 2
-							substart = curRow
 						}
 					}
+					subflag++
 				}
 			}
 
@@ -186,18 +189,26 @@ func main() {
 			curRow++
 			subtotals[subflag].count = subcount
 			subtotals[subflag].subtotal = subtotal
-			subtotalcol := cursorDef.SubCol - 1
-			curColRef := xlsx.ColIndexToLetters(subtotalcol)
-			formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
-								curColRef + strconv.Itoa(curRow) + ")"
-			fmt.Println(formula)
-			cell := sheet.Cell(curRow, subtotalcol)
-			cell.SetFormula(formula)
-			cell.NumFmt = "#,##0.00"
-			fmtvalue, _ := cell.FormattedValue()			
+			if subtotal > 0 {
+				subtotalcol := cursorDef.SubCol - 1
+				curColRef := xlsx.ColIndexToLetters(subtotalcol)
+				formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
+									curColRef + strconv.Itoa(curRow) + ")"
+				fmt.Println(formula)
+				cell := sheet.Cell(curRow, subtotalcol)
+				cell.SetFormula(formula)
+				cell.NumFmt = "#,##0.00"
+				fmtvalue, _ := cell.FormattedValue()		
 
-			if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
-				sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
+				if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
+					sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
+				}
+			} else {
+				if subflag == 0 {
+					cell := sheet.Cell(curRow, 0)
+					cell.Value = "No transactions for today."
+					sheet.Cols[0].Width = 45
+				}
 			}
 		}
 
@@ -205,7 +216,8 @@ func main() {
 			countmkr := "$count" + strconv.Itoa(x + 1)
 			countval := strconv.Itoa(subtotals[x].count)
 			summkr := "$sum" + strconv.Itoa(x + 1)
-			sumval := "$" + strconv.FormatFloat(subtotals[x].subtotal, 'f', 2, 64)
+			p := message.NewPrinter(language.Make("en"))
+			sumval := p.Sprintf("$%.0f", subtotals[x].subtotal)
 			cursorDef.SubjLine = strings.Replace(cursorDef.SubjLine, countmkr, countval, 1)
 			cursorDef.SubjLine = strings.Replace(cursorDef.SubjLine, summkr, sumval, 1)
 		}
