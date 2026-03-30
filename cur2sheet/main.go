@@ -1,9 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"math"
 	"fmt"
+	"os"
 	"strings"
 	"strconv"
 	"time"
@@ -29,7 +29,6 @@ func main() {
 	var subflag = 0
 	var subcount = 0
 
-	fmt.Println("Main Program.")
 	fmt.Println(cursheet.Database.GetString("database.tns"))
 
 	oraconn := cursheet.Database.GetString("credentials.user") + "/" +
@@ -61,6 +60,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//fmt.Println(cursorDef.SubCol)
 	//fmt.Println(cursorDef.Cols)
 	fmt.Println(cursorDef.Title)
 
@@ -194,17 +194,18 @@ func main() {
 			subtotals[subflag].subtotal = subtotal
 			if subtotal > 0 {
 				for _, s := range cursorDef.SubCol {
-				curColRef := xlsx.ColIndexToLetters(subtotalcol)
-				formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
-									curColRef + strconv.Itoa(curRow) + ")"
-				fmt.Println(formula)
-				cell := sheet.Cell(curRow, subtotalcol)
-				cell.SetFormula(formula)
-				cell.NumFmt = "#,##0.00"
-				fmtvalue, _ := cell.FormattedValue()		
+					subtotalcol := s - 1
+					curColRef := xlsx.ColIndexToLetters(subtotalcol)
+					formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
+										curColRef + strconv.Itoa(curRow) + ")"
+					fmt.Println(formula)
+					cell := sheet.Cell(curRow, subtotalcol)
+					cell.SetFormula(formula)
+					cell.NumFmt = "#,##0.00"
+					fmtvalue, _ := cell.FormattedValue()		
 
-				if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
-					sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
+					if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
+						sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
 					}
 				}
 			} else {
@@ -241,7 +242,7 @@ func main() {
 		
 		// need to write this to local file
 		fmt.Println(cursorDef.SubjLine)
-		err = ioutil.WriteFile("subjline.txt", []byte(cursorDef.SubjLine), 0600)
+		err = os.WriteFile("subjline.txt", []byte(cursorDef.SubjLine), 0600)
 		// filename format should be passed from config
 		outFile := "./" + cursorDef.Filename + "-" + time.Now().Format("20060102") + ".xlsx"
 
