@@ -20,6 +20,7 @@ type Column struct {
 	Sum			bool
 	Subtotal	bool
 	Style		xlsx.Style
+	SuppressZero bool
 }
 
 // Config defines the mapping between the cursor and the output sheet
@@ -35,7 +36,7 @@ type Config struct {
 	HeadBold	bool
 	FreezeRows	float64
 	Subtotal	bool
-	SubCol		int
+	SubCol		[]int
 	Subflags	[]Flag
 	Cols		[]Column
 }

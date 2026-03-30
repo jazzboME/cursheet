@@ -165,6 +165,7 @@ func main() {
 				case "VARCHAR2":
 					cell.Value = colData.(string)
 				case "NUMBER":
+					if colData == 0.0 && curColDef.SuppressZero { continue }
 					cell.SetFloat(colData.(float64))
 					if curColDef.Format != "" {
 						cell.NumFmt = curColDef.Format
