@@ -163,8 +163,10 @@ func main() {
 				cell := sheet.Cell(curRow, curColDef.ShowPos)
 				switch curColDef.Ctype {
 				case "VARCHAR2":
+					if colData == nil { colData = " "}
 					cell.Value = colData.(string)
 				case "NUMBER":
+					if colData == nil { colData = 0.0 }
 					if colData == 0.0 && curColDef.SuppressZero { continue }
 					cell.SetFloat(colData.(float64))
 					if curColDef.Format != "" {
