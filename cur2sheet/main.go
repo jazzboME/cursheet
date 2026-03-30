@@ -127,7 +127,7 @@ func main() {
 			subcount++
 
 			if len(cursorDef.Subflags) > 0 {
-				if resultSet.Row[cursorDef.SubCol] == cursorDef.Subflags[subflag].Flag {
+				if resultSet.Row[cursorDef.SubCol[0]] == cursorDef.Subflags[subflag].Flag { // Added [0]
 					if curRow >= substart {
 						for x, cols := range cursorDef.Cols {
 							if cols.Subtotal == true {
@@ -193,7 +193,7 @@ func main() {
 			subtotals[subflag].count = subcount
 			subtotals[subflag].subtotal = subtotal
 			if subtotal > 0 {
-				subtotalcol := cursorDef.SubCol - 1
+				for _, s := range cursorDef.SubCol {
 				curColRef := xlsx.ColIndexToLetters(subtotalcol)
 				formula := "sum(" + curColRef + strconv.Itoa(substart) + ":" +
 									curColRef + strconv.Itoa(curRow) + ")"
@@ -205,6 +205,7 @@ func main() {
 
 				if float64(len([]rune(fmtvalue)) + 2) > sheet.Cols[subtotalcol].Width {
 					sheet.Cols[subtotalcol].Width = float64(len([]rune(fmtvalue)) + 2)								
+					}
 				}
 			} else {
 				if subflag == 0 {
